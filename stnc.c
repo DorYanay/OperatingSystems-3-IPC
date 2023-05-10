@@ -4,7 +4,9 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 
+#define MAX_CLIENTS 1
 #define BUFFER_SIZE 1024
 
 void handle_client(int client_socket)
@@ -21,6 +23,8 @@ void handle_client(int client_socket)
 
         buffer[bytes_received] = '\0';
         printf("Received: %s", buffer);
+        printf(">: ");
+        fflush(stdout);
     }
 }
 
@@ -51,7 +55,7 @@ void start_server(int port)
     }
 
     // Listen for incoming connections
-    if (listen(server_socket, 1) == -1)
+    if (listen(server_socket, MAX_CLIENTS) == -1)
     {
         perror("Failed to listen");
         exit(1);
@@ -68,9 +72,51 @@ void start_server(int port)
     }
 
     printf("Client connected\n");
+    printf(">: ");
+    fflush(stdout);
 
     // Handle client communication
-    handle_client(client_socket);
+    fd_set read_fds;
+    int max_fd = client_socket;
+    char input[BUFFER_SIZE];
+
+    while (1)
+    {
+        FD_ZERO(&read_fds);
+        FD_SET(client_socket, &read_fds);
+        FD_SET(STDIN_FILENO, &read_fds);
+
+        if (select(max_fd + 1, &read_fds, NULL, NULL, NULL) == -1)
+        {
+            perror("select failed");
+            exit(1);
+        }
+
+        // Handle input from client socket
+        if (FD_ISSET(client_socket, &read_fds))
+        {
+            int bytes_received = recv(client_socket, input, BUFFER_SIZE, 0);
+            if (bytes_received <= 0)
+            {
+                printf("Client disconnected\n");
+                break;
+            }
+
+            input[bytes_received] = '\0';
+            printf("Received: %s", input);
+            printf(">: ");
+            fflush(stdout);
+        }
+
+        // Handle input from keyboard
+        if (FD_ISSET(STDIN_FILENO, &read_fds))
+        {
+            fgets(input, BUFFER_SIZE, stdin);
+            send(client_socket, input, strlen(input), 0);
+            printf(">: ");
+            fflush(stdout);
+        }
+    }
 
     // Close sockets
     close(client_socket);
@@ -103,17 +149,49 @@ void start_client(const char *ip, int port)
     }
 
     printf("Connected to server\n");
-    printf("Enter the msg:\n");
-    printf(">\n");
+    printf(">: ");
+    fflush(stdout);
 
     // Read input from keyboard and send to server
+    fd_set read_fds;
+    int max_fd = client_socket;
     char input[BUFFER_SIZE];
-    while (fgets(input, BUFFER_SIZE, stdin) != NULL)
+
+    while (1)
     {
-        if (send(client_socket, input, strlen(input), 0) == -1)
+        FD_ZERO(&read_fds);
+        FD_SET(client_socket, &read_fds);
+        FD_SET(STDIN_FILENO, &read_fds);
+
+        if (select(max_fd + 1, &read_fds, NULL, NULL, NULL) == -1)
         {
-            perror("Failed to send message");
+            perror("select failed");
             exit(1);
+        }
+
+        // Handle input from server socket
+        if (FD_ISSET(client_socket, &read_fds))
+        {
+            int bytes_received = recv(client_socket, input, BUFFER_SIZE, 0);
+            if (bytes_received <= 0)
+            {
+                printf("Server disconnected\n");
+                break;
+            }
+
+            input[bytes_received] = '\0';
+            printf("Received: %s", input);
+            printf(">: ");
+            fflush(stdout);
+        }
+
+        // Handle input from keyboard
+        if (FD_ISSET(STDIN_FILENO, &read_fds))
+        {
+            fgets(input, BUFFER_SIZE, stdin);
+            send(client_socket, input, strlen(input), 0);
+            printf(">: ");
+            fflush(stdout);
         }
     }
 
