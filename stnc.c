@@ -8,57 +8,6 @@
 
 #define MAX_CLIENTS 1
 #define BUFFER_SIZE 1024
-void textfile()
-{
-    int sizeInBytes = 100 * 1024 * 1024;
-    FILE *file = fopen("file.txt", "w");
-    if (file == NULL)
-    {
-        printf("Failed to create the file.\n");
-        return;
-    }
-
-    // 1MB buffer
-    const int bufferSize = 1024 * 1024;
-    char buffer[bufferSize];
-    long remainingBytes = sizeInBytes;
-
-    // Fill the buffer with 'A's
-    for (int i = 0; i < bufferSize; i++)
-    {
-        buffer[i] = 'A';
-    }
-
-    // Write the buffer repeatedly until the desired size is reached
-    while (remainingBytes > 0)
-    {
-        long bytesToWrite = (remainingBytes < bufferSize) ? remainingBytes : bufferSize;
-        fwrite(buffer, sizeof(char), bytesToWrite, file);
-        remainingBytes -= bytesToWrite;
-    }
-
-    fclose(file);
-    printf("File created successfully.\n");
-}
-
-void handle_client(int client_socket)
-{
-    char buffer[BUFFER_SIZE];
-    int bytes_received;
-
-    while (1)
-    {
-        // Receive message from the client
-        bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0);
-        if (bytes_received <= 0)
-            break;
-
-        buffer[bytes_received] = '\0';
-        printf("Received: %s", buffer);
-        printf(">: ");
-        fflush(stdout);
-    }
-}
 
 void start_server(int port)
 {
@@ -248,7 +197,6 @@ int main(int argc, char *argv[])
     }
     else if (strcmp(argv[1], "-c") == 0)
     {
-        textfile();
         const char *ip = argv[2];
         int port = atoi(argv[3]);
         start_client(ip, port);
