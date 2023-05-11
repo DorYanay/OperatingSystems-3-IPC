@@ -5,6 +5,20 @@
         "unistd.h": "c",
         "select.h": "c",
         "types.h": "c",
-        "socket.h": "c"
+        "socket.h": "c",
+        "stdlib.h": "c",
+        "array": "c",
+        "compare": "c",
+        "functional": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "random": "c",
+        "deque": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "vector": "c",
+        "string_view": "c",
+        "initializer_list": "c"
     }
 }
