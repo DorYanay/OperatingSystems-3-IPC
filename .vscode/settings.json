@@ -19,6 +19,11 @@
         "unordered_map": "c",
         "vector": "c",
         "string_view": "c",
-        "initializer_list": "c"
+        "initializer_list": "c",
+        "performance.h": "c",
+        "stdio.h": "c",
+        "time.h": "c",
+        "tcp.h": "c",
+        "mman.h": "c"
     }
 }
